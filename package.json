@@ -1,0 +1,27 @@
+{
+  "name": "d_app_story",
+  "version": "1.0.0",
+  "description": "A decenteralized story writting application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dav-vendator/StoryDapp.git"
+  },
+  "keywords": [
+    "DApp",
+    "Story"
+  ],
+  "author": "Various",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dav-vendator/StoryDapp/issues"
+  },
+  "homepage": "https://github.com/dav-vendator/StoryDapp#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.4.1",
+    "web3": "^1.3.4"
+  }
+}
