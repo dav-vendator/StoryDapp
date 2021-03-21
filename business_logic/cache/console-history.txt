@@ -1,0 +1,51 @@
+.exit
+await token.totalSupply()
+token.balanceOf("0x8a7f12811964a749b1DBf20706D80089E1044dA4")
+let token = stt.attach("0x8a7f12811964a749b1DBf20706D80089E1044dA4")
+stt
+let stt = await ethers.getContractFactory("STToken", "0x8a7f12811964a749b1DBf20706D80089E1044dA4")
+.exit
+await st.totalSupply()
+await st.getUnlockedAmount(accounts[1])
+st.getUnlockedAmount(accounts[1])
+await st.balanceOf(accounts[1])
+await st.transfer(accounts[1], 10)
+await st.transfer(accounts, 10)
+st.balanceOf("0x8a7f12811964a749b1DBf20706D80089E1044dA4", {from:accounts[0]}).then(console.log)
+st.balanceOf("0x8a7f12811964a749b1DBf20706D80089E1044dA4", {from:account[0]}).then(console.log)
+st.balanceOf("0x8a7f12811964a749b1DBf20706D80089E1044dA4", from: {account[0]}).then(console.log)
+let balance = await st.balanceOf(accounts[0])
+let balance = awaitst.balanceOf(accounts[0])
+accounts = await ethers.provider.listAccounts()
+st.balanceOf("0x8a7f12811964a749b1DBf20706D80089E1044dA4").then(console.log)
+st
+let st = STToken.attach("0x8a7f12811964a749b1DBf20706D80089E1044dA4")
+let STToken = await ethers.getContractFactory("STToken")
+.exit
+clear
+await STT = ST
+const ST = ethers.getContractFactory("STToken")
+st = STToken.attach("0x8a7f12811964a749b1DBf20706D80089E1044dA4")
+STToken
+let STToken = ethers.getContractFactory("STToken")
+let STToken = ethers.getContractFactory("STToken
+.exit
+let sttoken = ethers.getContractFactory("STToken")
+let sttoken = ethers.ContractFactory("STToken")
+.exit
+let STToken = await ethers.ContractFactory("STToken")
+let STToken = ethers.ContractFactory("STToken")
+.exit
+ethers.provider.getBalance(accounts[0]).then((v)=>{console.log(v.toString())})
+accounts
+let accounts = await ethers.provider.listAccounts()
+accounts
+accounts.then(console.log)
+accounts[0]
+accounts.then()
+let accounts = ethers.provider.listAccounts()
+.exit
+let accounts = await ethers.provider.listAccounts()
+.exit
+accounts = web3.eth.getAccounts()
+accounts = ethers.providers.listAccounts()

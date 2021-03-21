@@ -44,7 +44,7 @@ contract STToken is IERC20, Ownable{
 
   /**
   @dev Balance of account
-  @param _account (addres)
+  @param _account (address)
   @return balance (uint256)
    */
   function balanceOf(address _account) override external view returns (uint256){
