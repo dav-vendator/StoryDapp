@@ -48,7 +48,7 @@ contract STToken is IERC20, Ownable{
   @return balance (uint256)
    */
   function balanceOf(address _account) override external view returns (uint256){
-    require(_account != address(0));
+    require(_account != address(0), "Address is null");
     return balances[_account];
   }
 
@@ -59,9 +59,8 @@ contract STToken is IERC20, Ownable{
   @return allowed (uint256)
   */
   function allowance(address _owner, address _spender) override external view returns (uint256){
-    require(_owner != address(0));
-    require(_spender != address(0));
-
+    require(_owner != address(0), "Owner address is null");
+    require(_spender != address(0), "Spender address is null");
     return allowed[_owner][_spender];
   }
 
@@ -90,8 +89,8 @@ contract STToken is IERC20, Ownable{
   @return status (boolean)
   */
   function transfer(address _recipient, uint256 _amount) override external returns (bool){
-    require(_recipient != address(0)); //address is valid
-    require(_amount > 0); //valid amount
+    require(_recipient != address(0), "Receipient address is null"); //address is valid
+    require(_amount > 0, "Amount must be greater than or equal Zero"); //valid amount
     require(balances[msg.sender] - locked[msg.sender] >= _amount); //balance is okay
     balances[msg.sender] = balances[msg.sender].sub(_amount);
     balances[_recipient] = balances[_recipient].add(_amount);
@@ -108,8 +107,8 @@ contract STToken is IERC20, Ownable{
   @return status (boolean)
   */
   function transferFrom(address _sender, address _recipient,uint256 _amount) override external returns (bool){
-    require(_sender != address(0));
-    require(_recipient != address(0));
+    require(_sender != address(0), "Sender address is null");
+    require(_recipient != address(0), "Recipient address is null");
     require(_amount > 0);
     require(balances[_sender] - locked[_sender] >= _amount);
     balances[_sender] = balances[_sender].sub(_amount);
@@ -125,11 +124,11 @@ contract STToken is IERC20, Ownable{
   @return status (boolean)
    */
   function approve(address _spender, uint256 _amount) override external returns (bool){
-    require(_spender !=  address(0));
-    require(_amount > 0); 
+    require(_spender !=  address(0), "Spender address is null");
+    require(_amount > 0, "Amount must be greater than zero"); 
     uint256 availableBalance = balances[msg.sender].sub(locked[msg.sender]);
     //Might wanna check for other allowances
-    require(_amount < availableBalance);
+    require(_amount < availableBalance, "Insufficient Balance");
     allowed[msg.sender][_spender] = _amount;
     emit Approval(msg.sender, _spender, _amount);
     return true;
@@ -142,9 +141,9 @@ contract STToken is IERC20, Ownable{
   @return updated allowance (uint256)
   */
   function increaseApproval(address _spender, uint256 _amount) public returns (uint256){
-    require(_amount >= 0);
+    require(_amount >= 0, "Amount must be greater than or equal to 0");
     uint256 newAmount = _amount.add(allowed[msg.sender][_spender]);
-    require(newAmount < (balances[msg.sender].sub(locked[msg.sender])));
+    require(newAmount < (balances[msg.sender].sub(locked[msg.sender])),"Insufficient Balance");
     allowed[msg.sender][_spender] = newAmount;
     emit Approval(msg.sender, _spender, _amount);
     return allowed[msg.sender][_spender];
@@ -158,7 +157,7 @@ contract STToken is IERC20, Ownable{
   @return updated allowance (uint256)
   */  
   function decreaseApproval(address _spender, uint256 _amount) public returns (uint256) {
-    require(_amount >= 0);
+    require(_amount >= 0, "Amount must be greater than or equal to 0" );
     uint256 amount = allowed[msg.sender][_spender];
     if (_amount > amount){
       _amount = amount;
@@ -175,8 +174,8 @@ contract STToken is IERC20, Ownable{
   @return updated locked (uint256)
   */
   function increaseLockedAmount(address _owner, uint256 _amount) public onlyOwner returns (uint256) {
-    require(_owner != address(0));
-    require(_amount >= 0);
+    require(_owner != address(0), "Address is null");
+    require(_amount >= 0, "Amount must be greater than or equal to 0");
     uint256 lockingAmount = locked[_owner].add(_amount);
     require(balances[_owner] > lockingAmount);
     locked[_owner] = lockingAmount;
@@ -192,8 +191,8 @@ contract STToken is IERC20, Ownable{
   @return updated locked (uint256)
   */
   function decreaseLockedAmount(address _owner, uint256 _amount) public onlyOwner returns (uint256) {
-    require(_owner != address(0));
-    require(_amount >= 0);
+    require(_owner != address(0), "Owner address is null");
+    require(_amount >= 0, "Amount must be greater than or equal to 0");
     uint256 amount = locked[_owner];
     if (_amount > amount){
       _amount = amount;
