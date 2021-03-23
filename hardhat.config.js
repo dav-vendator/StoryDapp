@@ -1,4 +1,5 @@
-require('@nomiclabs/hardhat-ethers')
+require('@nomiclabs/hardhat-waffle')
+
 const {alchemyApiKey, mnemonicPhrase} = require("./.secret.json")
 module.exports = {
   networks: {
@@ -18,8 +19,8 @@ module.exports = {
   },
   paths: {
     sources: "./business_logic/contracts",
-    tests: "./business_logic/test",
+    tests: "./test",
     cache: "./business_logic/cache",
-    artifacts: "./business_logic/artifacts"
+    artifacts: "./artifacts"
   }
 };

@@ -9,6 +9,13 @@
 # production
 /build
 /build/contracts
+/artifacts
+
+# cache
+/cache
+
+# flatteners
+/custom_flatten
 
 # misc
 .DS_Store

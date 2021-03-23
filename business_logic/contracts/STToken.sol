@@ -30,7 +30,7 @@ contract STToken is IERC20, Ownable{
     name = "STToken";
     symbol = "STT";
     decimals = 18;
-    _totalSupply = 100 * 10**(8+6);
+    _totalSupply = 100 ** (18+6);
     //Creator of contract have full supply
     balances[msg.sender] = _totalSupply;
   }

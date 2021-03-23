@@ -1,0 +1,8 @@
+{
+    "compilerType": "solcjs",
+    "compilerVersion": "0.6.12",
+    "sourceDirectory": "./business_logic/contracts/",
+    "outputDirectory": "./build",
+    "flattenOutputDirectory": "./custom_flatten"
+}
+  

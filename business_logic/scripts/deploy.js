@@ -13,7 +13,6 @@ async function main() {
 
     console.log("STToken deployed to:", st_token.address);
     console.log("StoryDao deployed to:", st_dao.address);
-
   }
   
   main().then(() => process.exit(0))
