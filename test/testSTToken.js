@@ -8,11 +8,6 @@ const assert = chai.assert;
 
 let STToken, token, addresses;
 
-const extractReason = (error) =>{
-    let msg = error.message
-    return msg.slice(msg.search("revert")+7, msg.length)
-}
-
 describe('STToken_Owner_Only', () => {
 
     before(async function (){
@@ -26,6 +21,13 @@ describe('STToken_Owner_Only', () => {
         let ownerBalance = await token.balanceOf(owner.getAddress());
         except(token.totalSupply()).to.eventually.equal(ownerBalance);
     })
+
+    it('Should Be Called By Owner Only', async() =>{
+        let [owner, temp, third] = addresses;
+        await except(
+            token.connect(temp).increaseLockedAmount(third.getAddress(), 10)
+        ).to.revertedWith("Ownable: caller is not the owner")
+    })
 })
 
 describe("STToken_Transactions", () =>{
@@ -35,12 +37,15 @@ describe("STToken_Transactions", () =>{
         token = await STToken.deploy();
     })
 
-    it('Should Transfer', async () => {
+    it('Should Transfer Correct Amount', async () => {
         let [owner, receiver] = addresses;
         let initialBalance = await token.balanceOf(receiver.getAddress());
         await token.transfer(receiver.getAddress(), 10);
         let finalBalance = await token.balanceOf(receiver.getAddress());
-        assert.equal(finalBalance - initialBalance, 10, "Difference must be of 10Wei");
+        assert.equal(
+            finalBalance - initialBalance, 10,
+             "Difference must be of 10Wei"
+        );
     })
 
     it('Should Fail Transfer When Balance is Low', async () =>{
@@ -48,11 +53,9 @@ describe("STToken_Transactions", () =>{
         let initialBalance = await token.balanceOf(spender.getAddress())
         if (initialBalance > 0) 
             await token.transferFrom(spender.getAddress(), owner.getAddress(), initialBalance);
-        try{
-            await token.connect(spender).transfer(userTwo.getAddress(), 10);
-        }catch (error){
-           except(extractReason(error)).to.equal("Insufficient Balance");
-        }
+        await except(
+            token.connect(spender).transfer(userTwo.getAddress(), 10)
+        ).to.rejectedWith("Insufficient Balance")
     })
 
 })
@@ -62,6 +65,14 @@ describe("STToken_Events", () => {
         STToken = await ethers.getContractFactory("STToken");
         addresses = await ethers.getSigners();
         token = await STToken.deploy();
+    })
+
+    it('Should Emit Transfer', async () => {
+        let [owner, receiver] = addresses;
+        await except(
+            token.transfer(receiver.getAddress(), 10)
+        ).to.emit(token, "Transfer")
+        .withArgs(await owner.getAddress(),await receiver.getAddress(), 10)
     })
 
     it('Should Emit Allowance Changed', async () => {
@@ -86,6 +97,6 @@ describe("STToken_Events", () => {
         await except(
             await token.decreaseLockedAmount(user.getAddress(), 5)
         ).to.emit(token, "Locked")
-        .withArgs(await user.getAddress(), 5);
+        .withArgs(await user.getAddress(), 5); //10 - 5
     })
 })
