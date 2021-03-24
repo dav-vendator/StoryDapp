@@ -17,18 +17,39 @@ describe('STToken', () => {
         token = await STToken.deploy();
     })
 
-    it('ownerHaveAllCoins', async () => {
-        [owner] = addresses;
+    it('Should Give Owner All Coin', async () => {
+        let [owner] = addresses;
         let ownerBalance = await token.balanceOf(owner.getAddress());
         except(token.totalSupply()).to.eventually.equal(ownerBalance);
     })
 
-    it('transferAndCheck', async () => {
-        [owner, receiver] = addresses;
+    it('Should Transfer', async () => {
+        let [owner, receiver] = addresses;
         let initialBalance = await token.balanceOf(receiver.getAddress());
         await token.transfer(receiver.getAddress(), 10);
         let finalBalance = await token.balanceOf(receiver.getAddress());
-        
         assert.equal(finalBalance - initialBalance, 10, "Difference must be of 10Wei");
     })
+
+    it('Should Fail Transfer When Balance is Low', async () =>{
+        let [owner, spender, userTwo] = addresses;
+        let initialBalance = await token.balanceOf(spender.getAddress())
+        if (initialBalance > 0) 
+            await token.transferFrom(spender.getAddress(), owner.getAddress(), initialBalance);
+        except(token.connect(spender).transfer(userTwo.getAddress(), 10)).to.eventually.rejectedWith("Insufficient Balance") 
+    })
+
+    it('Should Emit Allowance Changed', async () => {
+
+    })
+
+    it('Should Emit Locked Changed', async () => {
+
+    })
+    
+    it('Should Emit Unlocked Changed', async () => {
+
+    })
+
+
 })
