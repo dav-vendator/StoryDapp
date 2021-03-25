@@ -10,8 +10,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 2. Setting fee for Whitelisting, Submission as well as YeildFarm
 3. Max duration per chapter
 4. Max entries per chapter
-@notice A chapter is assumed to completed if either it has surpassed
-its max duration or has reached maximum number of entried.
+@notice A chapter is assumed to complete if either it has surpassed
+its max duration or has reached maximum number of entries.
 @notice Not rigoursly tested. Might be unsafe for prodcution.
 */
 contract StoryDao is Ownable{
@@ -50,7 +50,7 @@ contract StoryDao is Ownable{
     */
     function changeDaofeePercent(uint16 _fee) external onlyOwner returns (bool){
         require(_fee > 0, "Fee must be greater than zero");
-        require(_fee > 100, "Fee percent must be less than 100");
+        require(_fee < 100, "Fee percent must be less than 100");
         daofee = _fee;
         emit DaofeePercentChanged(daofee);
         return true;
@@ -101,7 +101,7 @@ contract StoryDao is Ownable{
     @param _entries (uint16)
     @return status (bool)
     */
-    function changeMaxEnteries(uint16 _entries) external onlyOwner returns (bool) {
+    function changeMaxEntries(uint16 _entries) external onlyOwner returns (bool) {
         require(_entries >= 1, "Chapter must have at least 1 entry");
         maxEntriesPerChapter = _entries;
         return true;
