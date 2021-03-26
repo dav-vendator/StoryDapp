@@ -53,10 +53,26 @@ describe("STToken_Transactions", () => {
         let [owner, spender, userTwo] = addresses;
         let initialBalance = await token.balanceOf(spender.getAddress())
         if (initialBalance > 0)
-            await token.transferFrom(spender.getAddress(), owner.getAddress(), initialBalance);
+            await token.connect(spender).transferFrom(spender.getAddress(), owner.getAddress(), initialBalance);
         await except(
             token.connect(spender).transfer(userTwo.getAddress(), 10)
         ).to.rejectedWith("Insufficient Balance");
+    })
+
+    it('Should fail because of no approval', async() => {
+        let [owner, spender, userTwo] = addresses;
+        await except(
+            token.connect(spender).transferFrom(owner.getAddress(), userTwo.getAddress(), 10)
+        ).to.rejectedWith("Amount exceeded allowance");
+    })
+
+    it('Should allow transfer from approved third party', async () => {
+        let [owner, spender, userTwo] = addresses;
+        await token.increaseApproval(spender.getAddress(), 15);
+        await except(
+            token.connect(spender).transferFrom(owner.getAddress(), userTwo.getAddress(), 15)
+        ).to.emit(token, "Approval")
+        .withArgs(await owner.getAddress(), await spender.getAddress(), 0)
     })
 
 })

@@ -89,11 +89,9 @@ contract STToken is IERC20, Ownable{
   @return status (boolean)
   */
   function transfer(address _recipient, uint256 _amount) override external returns (bool){
-    require(_recipient != address(0), "Receipient address is null"); //address is valid
-    require(_amount > 0, "Amount must be greater than or equal Zero"); //valid amount
-    require(balances[msg.sender] - locked[msg.sender] >= _amount, "Insufficient Balance"); //balance is okay
-    balances[msg.sender] = balances[msg.sender].sub(_amount);
-    balances[_recipient] = balances[_recipient].add(_amount);
+    require(_recipient != address(0), "Recipient address invalid");
+    _checkBalance(_amount);
+    _transferAmount(msg.sender, _recipient, _amount);
     emit Transfer(msg.sender, _recipient, _amount);
     return true;
   }
@@ -107,12 +105,20 @@ contract STToken is IERC20, Ownable{
   @return status (boolean)
   */
   function transferFrom(address _sender, address _recipient,uint256 _amount) override external returns (bool){
-    require(_sender != address(0), "Sender address is null");
-    require(_recipient != address(0), "Recipient address is null");
-    require(_amount > 0, "Amount should be greater than 0");
-    require(balances[_sender] - locked[_sender] >= _amount,  "Insufficient Balance");
-    balances[_sender] = balances[_sender].sub(_amount);
-    balances[_recipient] = balances[_recipient].add(_amount);
+    require(_sender != address(0), "Sender address invalid");
+    require(_recipient != address(0), "Recipient address invalid");
+    if (_sender == msg.sender){
+      _checkBalance(_amount);
+      _transferAmount(msg.sender, _recipient, _amount);
+      return true;
+    }
+    require(allowed[_sender][msg.sender] >= _amount, "Amount exceeded allowance");
+    _transferAmount(_sender, _recipient, _amount);
+    //decrease approval
+    uint256 approval = allowed[_sender][msg.sender];
+    approval = approval.sub(_amount);
+    allowed[_sender][msg.sender] = approval;
+    emit Approval(_sender, msg.sender, approval);
     emit Transfer(_sender, _recipient, _amount);
     return true;
   }
@@ -201,4 +207,16 @@ contract STToken is IERC20, Ownable{
     emit Locked(_owner, locked[_owner]);
     return locked[_owner];
   }
+
+  //Private Functions
+  function _checkBalance(uint256 _amount) private view {
+    require(_amount > 0, "Amount must be greater than or equal Zero"); //valid amount
+    require(balances[msg.sender] - locked[msg.sender] >= _amount, "Insufficient Balance"); //balance is okay
+  }
+
+  function _transferAmount(address from, address to, uint256 _amount) private {
+    balances[from] = balances[from].sub(_amount, "Insufficient Fund");
+    balances[to] = balances[to].add(_amount);
+  }
+
 }
