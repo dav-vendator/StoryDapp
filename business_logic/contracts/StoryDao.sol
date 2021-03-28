@@ -3,6 +3,7 @@ pragma solidity >= 0.5.0;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./LockableToken.sol";
 
 /**
 @dev StoryDao is manager of DaoVote:
@@ -31,15 +32,26 @@ contract StoryDao is Ownable{
 
     uint256 private whitelistCount;
     uint256 private blacklistCount;
+    //LockableToken
+    LockableToken public token;
 
     mapping(address => bool) private whitelist;
     mapping(address => bool) private blacklist;
 
-    event Whitelisted(address _address, bool _status);
-    event Blacklisted(address _address, bool _status);
+    event Whitelisted(address indexed _address, bool _status);
+    event Blacklisted(address indexed _address, bool _status);
     event SubmissionCommissionChanged(uint256 _newfees);
     event WhitelistfeeChanged(uint256 _newfees);
     event DaofeePercentChanged(uint16 _newpercent);
+
+    /**
+    @dev Constructor for StoryDao
+    @param _tokenAddress address of LockableToken
+    */
+    constructor(address _tokenAddress) public {
+        require(_tokenAddress != address(0), "Token address cannot be null-address");
+        token = LockableToken(_tokenAddress);
+    }
 
     /**
     @dev Changes fee percent of YieldFarm i.e amount charged for converting
@@ -105,5 +117,38 @@ contract StoryDao is Ownable{
         require(_entries >= 1, "Chapter must have at least 1 entry");
         maxEntriesPerChapter = _entries;
         return true;
+    }
+
+    /**
+    @dev whitelist the address provided enough ethers are received
+    */
+    function whitelistAddress(address _address) public payable {
+        require(_address != address(0));
+        require(!whitelist[_address], "Candidate is already in whitelist.");
+        require(blacklist[_address], "Candidate is blacklisted!");
+        require(msg.value < whitelistfee, "Please send enough ethers for whitelisting fee!");
+        whitelist[_address] = true;
+        whitelistCount++;
+        emit Whitelisted(_address, true);
+
+        if (msg.value > whitelistfee){
+            //buyToken(_address, msg.value.sub(whitelistfee))
+        }
+
+    }
+
+    /**
+    @dev Callback function when ether is received.
+    */
+    receive () external payable {
+        if (!whitelist[msg.sender]){
+            whitelistAddress(msg.sender);
+        }else{
+            //something else
+        }
+    }
+
+    function daoTokenBalance() public view returns(uint256){
+        return token.balanceOf(address(this));
     }
 }

@@ -24,7 +24,7 @@ contract STToken is IERC20, Ownable{
   mapping (address => mapping(address => uint)) internal allowed;
 
   ///Emitted when locked amount is altered
-  event Locked(address indexed owner, uint256 indexed amount);
+  event Locked(address indexed owner, uint256 amount);
 
   constructor() public {
     name = "STToken";

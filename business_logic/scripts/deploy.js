@@ -8,7 +8,7 @@ async function main() {
     //StoryDao
     const StoryDao = await ethers.getContractFactory("StoryDao");
     console.log("Deploying StoryDao...");
-    const st_dao = await StoryDao.deploy();
+    const st_dao = await StoryDao.deploy(st_token.address);
     await st_dao.deployed();
 
     console.log("STToken deployed to:", st_token.address);
