@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 //For ease in Contract to Contract communication
 abstract contract LockableToken is Ownable{
     function totalSupply() public virtual view returns (uint256);
-
+    function decimals() public virtual view returns  (uint256);
     function balanceOf(address _who) public virtual view returns (uint256);
     function allowance(address _owner, address _spender) public virtual view returns (uint256);
 

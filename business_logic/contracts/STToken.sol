@@ -16,7 +16,7 @@ contract STToken is IERC20, Ownable{
 
   string public name;
   string public symbol;
-  uint8 public decimals;
+  uint8 public _decimals;
   uint256 public _totalSupply;
 
   mapping (address => uint256) private locked;
@@ -29,7 +29,7 @@ contract STToken is IERC20, Ownable{
   constructor() public {
     name = "STToken";
     symbol = "STT";
-    decimals = 18;
+    _decimals = 18;
     _totalSupply = 100 ** (18+6);
     //Creator of contract have full supply
     balances[msg.sender] = _totalSupply;
@@ -40,6 +40,13 @@ contract STToken is IERC20, Ownable{
   */
   function totalSupply() override external view returns (uint256){
     return _totalSupply;
+  }
+
+  /**@dev Decimals in STToken.
+  @return totalSupply (uint256)
+  */
+  function decimals() public view returns  (uint256){
+    return _decimals;
   }
 
   /**
