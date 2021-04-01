@@ -41,11 +41,10 @@ contract StoryDao is Ownable{
     //LockableToken
     LockableToken public token;
 
-    mapping(address => bool) public
- whitelist;
-    mapping(address => bool) public
- blacklist;
+    mapping(address => bool) public whitelist;
+    mapping(address => bool) public blacklist;
     mapping(bytes32 => Submission) public submissions;
+    mapping(address => uint256) public deletions;
 
     event Whitelisted(address indexed _address, bool _status);
     event Blacklisted(address indexed _address, bool _status);
@@ -56,6 +55,7 @@ contract StoryDao is Ownable{
 
     event SubmissionCreated(uint256 _index, bytes _content, bool _image, address _submitter);
     event SubmissionDeleted(uint256 _index, bytes _content, bool _image, address _submitter);
+
     /**
     @dev Constructor for StoryDao
     @param _tokenAddress address of LockableToken
@@ -132,7 +132,9 @@ contract StoryDao is Ownable{
     }
 
     /**
-    @dev whitelist the address provided enough ethers are received
+    @dev whitelist the address provided enough ethers are received. If more than required ether
+    is provided then rest is spent in tokens
+    @param _address (address)
     */
     function whitelistAddress(address _address) public payable {
         require(_address != address(0));
@@ -142,11 +144,9 @@ contract StoryDao is Ownable{
         whitelist[_address] = true;
         whitelistCount++;
         emit Whitelisted(_address, true);
-
         if (msg.value > whitelistfee){
-            //buyToken(_address, msg.value.sub(whitelistfee))
+            _buyTokenInternal(_address, msg.value.sub(whitelistfee));
         }
-
     }
 
     /**
@@ -194,7 +194,11 @@ contract StoryDao is Ownable{
         return token.transfer(_buyer, tokens);
     }
 
-    //Not external callable
+    /**
+    @dev buyTokenInternal does not throw if dao has less amount of tokens to sell.
+    @param _buyer (address)
+    @param _amountWei (uint256)
+    */
     function _buyTokenInternal(address _buyer, uint256 _amountWei) internal {
         require(_buyer != address(0));
         require(_amountWei > 0);
@@ -208,13 +212,18 @@ contract StoryDao is Ownable{
          token.transfer(_buyer, tokens);
     }
 
+    /**
+    @dev calculate submisison fee required for current submission. It increases as number of 
+    submission increase.
+    @return submissionFee (uint256)
+    */
     function _calculateSubmissionFee() view internal returns (uint256){
         return submissionCount * submissionZeroFee;
     }
 
     ///TODO: Break this function into smaller chunks
     ///TODO: Owner and Transfer function
-    function createSubmission(bytes memory _content, bool _image) external payable{
+    function createSubmission(bytes memory _content, bool _image) external payable {
         require(token.balanceOf(msg.sender) >= 10 ** token.decimals());
         require(whitelist[msg.sender], "Must be whitelisted");
         require(!blacklist[msg.sender], "Must not be blacklisted");
@@ -245,17 +254,77 @@ contract StoryDao is Ownable{
         ownerBalance += fee.div(daofee);
     }
 
-    //owner's 
+    /**
+    @dev Transfer all of owner's share to owner.
+    */
+    ///TODO: Owner and Transfer function
     function withdrawToOwner() public {
-        owner.transfer(ownerBalance);
+        //owner.transfer(ownerBalance);
         ownerBalance = 0;
     }
 
-    function withdrawalAmountToOwner(uint256 _amount) public{
+    /**
+    @dev Transfer min{_amount, owner's Balance} to owner.
+    @param _amount (uin256)
+    TODO: owner.transfer
+    */
+    function withdrawalAmountToOwner(uint256 _amount) public {
         uint256 withdraw = _amount;
         if (withdraw > ownerBalance)
             withdraw = ownerBalance;
-        owner.trasfer(withdraw);
+        //owner.trasfer(withdraw);
         ownerBalance = ownerBalance.sub(withdraw);
     }
+
+    /**
+    @dev Whether submission with _hash already exists or not.
+    @param _hash of submission (bytes32)
+    */
+    function submissionExist(bytes32  _hash) public view returns(bool){
+        return submissions[_hash].exist;
+    }
+
+    /**
+    @dev returns submission by hash
+    @param _hash (bytes32)
+    @return content (bytes)
+    @return image (bool)
+    @return submitter (address)
+    @notice Assumes: Submission already exist.
+    */
+    function getSubmission(bytes32  _hash) public view returns (bytes memory content, bool image, address submitter){
+        return (submissions[_hash].content, 
+            submissions[_hash].isImage, 
+            submissions[_hash].submitter);
+    }
+
+    /**
+    @dev (Utility) Returns all of the submission's hashes.
+    @return submissions (bytes32 array)
+    */
+    function getAllSubmissionHashes() public view returns (bytes32[] memory){
+        return submissionIndex;
+    }
+
+    /**
+    @dev (Utility) Returns submission count.
+    @return total count (uint256)
+    */
+    function getSubmissionCount() public view returns (uint256) {
+        return submissionIndex.length;
+    }
+
+    /**
+    @dev Remove a submission having hash = _hash, provided it already exist.
+    @param _hash (bytes32)
+    */
+    function deleteSubmission(bytes32  _hash) internal {
+        require(submissionExist(_hash), "Submission doesn't exist");
+        Submission storage sub = submissions[_hash];
+        sub.exist = false;
+        deletions[submissions[_hash].submitter] += 1;
+        emit SubmissionDeleted(sub.index, sub.content, sub.isImage, sub.submitter);
+        submissionCount -= 1;
+    }
+
 }
