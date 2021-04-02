@@ -1,4 +1,5 @@
 require('@nomiclabs/hardhat-waffle')
+require('hardhat-docgen')
 
 const {alchemyApiKey, mnemonicPhrase} = require("./.secret.json")
 module.exports = {
@@ -22,5 +23,9 @@ module.exports = {
     tests: "./test",
     cache: "./business_logic/cache",
     artifacts: "./artifacts"
+  },
+  docgen:{
+    path: "./docs",
+    clear: true
   }
 };

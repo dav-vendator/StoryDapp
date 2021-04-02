@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./LockableToken.sol";
 import "./SubmissionStruct.sol";
+import "./ProposalStruct.sol";
 
 /**
 @dev StoryDao is manager of DaoVote:
@@ -30,6 +31,7 @@ contract StoryDao is Ownable{
     //Max entries a chapter can have
     uint16 public  maxEntriesPerChapter = 1000;
     uint16 public submissionCount = 0;
+    uint256 public withdrawDeadline = 5 days; 
 
     uint256 public ownerBalance = 0;
     uint256 public whitelistCount = 0;
@@ -38,6 +40,12 @@ contract StoryDao is Ownable{
     uint16 public minImageGap = 50; //every 50th entry can be an image
 
     bytes32[] public submissionIndex; //index for submissions map
+    //proposals
+    Proposal[] public proposals;
+    uint256 proposalCount = 0;
+
+    bool public active = true;
+
     //LockableToken
     LockableToken public token;
 
@@ -56,6 +64,11 @@ contract StoryDao is Ownable{
     event SubmissionCreated(uint256 _index, bytes _content, bool _image, address _submitter);
     event SubmissionDeleted(uint256 _index, bytes _content, bool _image, address _submitter);
 
+    event ProposalAdded(uint256 _id, uint8 _typeFlag, bytes32 _hash, string _description, address indexed _submitter);
+    event ProposalExecuted(uint256 _id);
+    event Voted(address _voter, bool _vote, uint256 _power, string reason);
+
+    event StoryEnded();
     /**
     @dev Constructor for StoryDao
     @param _tokenAddress address of LockableToken
@@ -72,7 +85,7 @@ contract StoryDao is Ownable{
     @param _fee (uint16)
     @return status (bool)
     */
-    function changeDaofeePercent(uint16 _fee) external onlyOwner returns (bool){
+    function changeDaofeePercent(uint16 _fee) storyActive external onlyOwner returns (bool){
         require(_fee > 0, "Fee must be greater than zero");
         require(_fee < 100, "Fee percent must be less than 100");
         daofee = _fee;
@@ -87,7 +100,7 @@ contract StoryDao is Ownable{
     @param _fee (uint16)
     @return status (bool)
     */
-    function changeWhitelistfee(uint256 _fee) external onlyOwner returns (bool){
+    function changeWhitelistfee(uint256 _fee) storyActive external onlyOwner returns (bool){
         require(_fee > 0, "Fee must be greater than zero");
         whitelistfee = _fee;
         emit WhitelistfeeChanged(whitelistfee);
@@ -100,7 +113,7 @@ contract StoryDao is Ownable{
     @param _fee (uint16)
     @return status (bool)
     */
-    function changeSubmissionfee(uint256 _fee) external onlyOwner returns (bool) {
+    function changeSubmissionfee(uint256 _fee) storyActive external onlyOwner returns (bool) {
         require(_fee > 0, "Fee must be greater than zero");
         submissionZeroFee = _fee;
         emit SubmissionCommissionChanged(submissionZeroFee);
@@ -113,7 +126,7 @@ contract StoryDao is Ownable{
     @param _days (uint16)
     @return status (bool)
     */
-    function changeChapterDurationDays(uint16 _days) external onlyOwner returns (bool) {
+    function changeChapterDurationDays(uint16 _days) storyActive external onlyOwner returns (bool) {
         require(_days >= 1, "Chapter duration must be at least 1 day");
         chapterDuration = _days;
         return true;
@@ -125,7 +138,7 @@ contract StoryDao is Ownable{
     @param _entries (uint16)
     @return status (bool)
     */
-    function changeMaxEntries(uint16 _entries) external onlyOwner returns (bool) {
+    function changeMaxEntries(uint16 _entries) storyActive external onlyOwner returns (bool) {
         require(_entries >= 1, "Chapter must have at least 1 entry");
         maxEntriesPerChapter = _entries;
         return true;
@@ -136,7 +149,7 @@ contract StoryDao is Ownable{
     is provided then rest is spent in tokens
     @param _address (address)
     */
-    function whitelistAddress(address _address) public payable {
+    function whitelistAddress(address _address) storyActive public payable {
         require(_address != address(0));
         require(!whitelist[_address], "Candidate is already in whitelist.");
         require(blacklist[_address], "Candidate is blacklisted!");
@@ -150,11 +163,44 @@ contract StoryDao is Ownable{
     }
 
     /**
+    @dev blacklist the address.
+    @param _address (address)
+    */
+    function blacklistAddress(address _address) storyActive public payable {
+        require(_address != address(0));
+        blacklist[_address] = true;
+        whitelist[_address] = false;
+        whitelistCount-=1;
+        blacklistCount+=1;
+        token.increaseLockedAmount(_address, token.getUnlockedAmount(_address));
+        emit Blacklisted(_address, true);
+    }
+
+    function unblacklistAddress(address _address) storyActive payable public {
+        require(blacklist[_address] == true, "Address is already whitelisted");
+        require(msg.value >= 0.05 ether, "Require atleast 0.05 eth.");
+        require(_notVoting(_address), "Wait till the execution of proposals that you've voted in");
+        ownerBalance = ownerBalance.add(msg.value);
+        blacklist[_address] = false;
+        token.decreaseLockedAmount(_address, token.balanceOf(_address));
+        emit Blacklisted(_address, false);
+    }
+
+    function _notVoting(address _address) internal view returns(bool) {
+        for (uint256 i=0; i < proposalCount; i++){
+            if (!proposals[i].isExecuted && proposals[i].voters[_address]){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
     @dev Callback function when ether is received.
     */
     receive () external payable {
         if (!whitelist[msg.sender]){
-            whitelistAddress(msg.sender);
+            whitelistAddress(msg.sender); 
         }else{
             //something else
         }
@@ -172,7 +218,7 @@ contract StoryDao is Ownable{
     @dev Change token address. Only owner. Emits TokenAddressChanged 
     @param _tokenAddress (address)
     */
-    function changeTokenAddress(address _tokenAddress) onlyOwner public {
+    function changeTokenAddress(address _tokenAddress) storyActive onlyOwner public {
         require(_tokenAddress != address(0));
         token = LockableToken(_tokenAddress);
         emit TokenAddressChanged(_tokenAddress);
@@ -183,7 +229,7 @@ contract StoryDao is Ownable{
     @param _buyer (address)
     @param _amountWei (uint256)
     */
-    function buyTokenThrow(address _buyer, uint256 _amountWei) external returns (bool){
+    function buyTokenThrow(address _buyer, uint256 _amountWei) storyActive external returns (bool){
         require(_buyer != address(0));
         require(_amountWei > 0);
         require(whitelist[_buyer]);
@@ -222,11 +268,8 @@ contract StoryDao is Ownable{
     }
 
     ///TODO: Break this function into smaller chunks
-    ///TODO: Owner and Transfer function
-    function createSubmission(bytes memory _content, bool _image) external payable {
+    function createSubmission(bytes memory _content, bool _image) storyActive memberOnly external payable {
         require(token.balanceOf(msg.sender) >= 10 ** token.decimals());
-        require(whitelist[msg.sender], "Must be whitelisted");
-        require(!blacklist[msg.sender], "Must not be blacklisted");
         uint256 fee = _calculateSubmissionFee();
         require(msg.value > fee, "Insufficient fee!");
         if (_image){
@@ -257,22 +300,20 @@ contract StoryDao is Ownable{
     /**
     @dev Transfer all of owner's share to owner.
     */
-    ///TODO: Owner and Transfer function
     function withdrawToOwner() public {
-        //owner.transfer(ownerBalance);
+        payable(owner()).transfer(ownerBalance);
         ownerBalance = 0;
     }
 
     /**
     @dev Transfer min{_amount, owner's Balance} to owner.
     @param _amount (uin256)
-    TODO: owner.transfer
     */
     function withdrawalAmountToOwner(uint256 _amount) public {
         uint256 withdraw = _amount;
         if (withdraw > ownerBalance)
             withdraw = ownerBalance;
-        //owner.trasfer(withdraw);
+        payable(owner()).transfer(withdraw);
         ownerBalance = ownerBalance.sub(withdraw);
     }
 
@@ -318,13 +359,132 @@ contract StoryDao is Ownable{
     @dev Remove a submission having hash = _hash, provided it already exist.
     @param _hash (bytes32)
     */
-    function deleteSubmission(bytes32  _hash) internal {
+    function _deleteSubmission(bytes32  _hash) internal returns(bool) {
         require(submissionExist(_hash), "Submission doesn't exist");
         Submission storage sub = submissions[_hash];
         sub.exist = false;
         deletions[submissions[_hash].submitter] += 1;
+        if (deletions[submissions[_hash].submitter] >= 5){
+            blacklistAddress(submissions[_hash].submitter);
+        }
         emit SubmissionDeleted(sub.index, sub.content, sub.isImage, sub.submitter);
         submissionCount -= 1;
+        return true;
+    }
+
+    function vote(uint256 _proposalId, bool _vote, string calldata _reason, uint256 _votePower) storyActive tokenHolderOnly public returns(int256){
+        require(_votePower > 0, "At least some power must be given to vote.");
+        require(uint256(_votePower) <= token.balanceOf(msg.sender), "Voter must have enough token to cover power cost.");
+        Proposal storage p = proposals[_proposalId];
+        require(!p.isExecuted, "Proposal must not have been executed already.");
+        require(p.deadline > now, "Proposal must not have expired.");
+        require(!p.voters[msg.sender], "User must not have already voted.");
+        Vote memory pVote;
+        pVote.inSupport = _vote;
+        pVote.reason = _reason;
+        pVote.voter = msg.sender;
+        pVote.power = _votePower;
+        p.votes.push(pVote);
+        p.voters[msg.sender] = true;
+        p.currentResult = (_vote)? p.currentResult+int256(_votePower) : p.currentResult - int256(_votePower);
+        token.increaseLockedAmount(msg.sender, _votePower);
+        emit Voted(msg.sender, _vote, _votePower, _reason);
+        return p.currentResult;
+    }
+
+
+    function proposeDeletion(bytes32 _hash, string calldata _desc) storyActive memberOnly public{
+        require(submissionExist(_hash), "Submission not there.");
+        uint256 proposalId = proposals.length+1;
+        Proposal storage proposal = proposals[proposalId];
+        proposal.description= _desc;
+        proposal.isExecuted = false;
+        proposal.creationDate = now;
+        proposal.submitter = msg.sender;
+        proposal.typeFlag = 1; //deletion
+        proposal.target = _hash;
+        proposal.deadline = now + 2 days;
+        emit ProposalAdded(proposalId, 1, _hash, _desc, msg.sender);
+        proposalCount += 1;
+    }
+
+    function proposeDeletionUrgent(bytes32 _hash, string calldata _desc) storyActive onlyOwner public {
+        require(submissionExist(_hash), "Submission not there.");
+        uint256 proposalId = proposals.length+1;
+        Proposal storage proposal = proposals[proposalId];
+        proposal.description = _desc;
+        proposal.isExecuted = false;
+        proposal.creationDate = now;
+        proposal.typeFlag = 1;
+        proposal.target = _hash;
+        proposal.deadline = now + 4 hours;
+        emit ProposalAdded(proposalId, 1, _hash, _desc, msg.sender);
+        proposalCount += 1;
+    }
+
+    function executeProposal(uint256 _id) storyActive public {
+        Proposal storage proposal = proposals[_id];
+        require(now >= proposal.deadline && !proposal.isExecuted);
+        if (proposal.typeFlag == 1 && proposal.currentResult > 0){
+            assert(_deleteSubmission(proposal.target));
+        }
+        uint256 len = proposal.votes.length;
+        for (uint i=0; i < len; i++){ 
+            token.decreaseLockedAmount(proposal.votes[i].voter, proposal.votes[i].power);
+        }
+        proposal.isExecuted = true;
+        emit ProposalExecuted(_id);
+    }
+
+    function endStory() storyActive external {
+        withdrawToOwner();
+        active = false;
+        emit StoryEnded();
+    }
+
+    function withdrawLeftoverTokens() external onlyOwner{
+        require(!active, "Cannot be called when story is active.");
+        token.transfer(msg.sender, token.balanceOf(address(this)));
+        token.transferOwnership(msg.sender);
+    }
+
+    function unlockMyTokens() external {
+        require(!active, "Cannot be called when story is active.");
+        require(token.getLockedAmount(msg.sender) > 0, "Must have some locked amount.");
+        token.decreaseLockedAmount(msg.sender, token.getLockedAmount(msg.sender));
+    }
+
+    //dividend
+    function withdrawDividend() memberOnly external {
+        require(!active, "Cannot be called when story is active.");
+        uint256 owed = address(this).balance.div(whitelistCount);
+        msg.sender.transfer(owed);
+        whitelist[msg.sender] = false;
+        whitelistCount--;
+    }
+
+    function withdrawEverythingPostDeadline() external onlyOwner {
+        require(!active, "Cannot be called when story is active.");
+        require(now > withdrawDeadline+3 days);
+        payable(owner()).transfer(address(this).balance);
+    } 
+    //---modifier
+
+    modifier storyActive() {
+        require(active == true);
+        _;
+    }
+
+    modifier tokenHolderOnly() {
+        require(token.balanceOf(msg.sender) >= 10**token.decimals(),
+        "Must have sufficient tokens");
+        _;
+    }
+
+    modifier memberOnly() {
+        require(whitelist[msg.sender], "Must be whitelisted");
+        require(!blacklist[msg.sender], "Must not be blacklisted");
+        _;
     }
 
 }

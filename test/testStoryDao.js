@@ -4,12 +4,14 @@ const { ethers } = require('hardhat');
 chai.use(chaiAsPromised)
 const except = chai.expect;
 
-let storyDao, dao, addresses;
+let storyDao, dao, addresses, STToken, token;
 
 describe("StoryDao_Owner_Only", () => {
     before(async () => {
+        STToken = await ethers.getContractFactory("STToken");
+        token = await STToken.deploy();
         storyDao = await ethers.getContractFactory("StoryDao");
-        dao = await storyDao.deploy();
+        dao = await storyDao.deploy(token.address);
         addresses = await ethers.getSigners();
     })
 
@@ -41,8 +43,10 @@ describe("StoryDao_Owner_Only", () => {
 
 describe("StoryDao_Events", () => {
     before(async () => {
+        STToken = await ethers.getContractFactory("STToken");
+        token = await STToken.deploy();
         storyDao = await ethers.getContractFactory("StoryDao");
-        dao = await storyDao.deploy();
+        dao = await storyDao.deploy(token.address);
         addresses = await ethers.getSigners();
     })
 

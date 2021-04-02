@@ -1,10 +1,16 @@
 {
   "name": "d_app_story",
   "version": "1.0.0",
-  "description": "A decenteralized story writting application",
+  "description": "A decentralized story writing application",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --exit --recursive ./test"
+    "test": "npx hardhat test ",
+    "compile":"npx hardhat compile",
+    "genDoc": "npx hardhat docgen",
+    "deployLocal": "npx hardhat run ./business_logic/scripts/deploy.js --network localhost",
+    "deployRinkeby": "npx hardhat run ./business_logic/scripts/deploy.js --network rinkeby",
+    "consoleLocal":"npx hardhat console --network localhost",
+    "consoleRinkeby":"npx hardhat console --network rinkeby"
   },
   "repository": {
     "type": "git",
@@ -33,6 +39,7 @@
     "ethereum-waffle": "^3.3.0",
     "ethers": "^5.0.32",
     "hardhat": "^2.1.1",
+    "hardhat-docgen": "^1.1.0",
     "mocha": "^7.2.0",
     "truffle-flattener": "^1.5.0"
   }
