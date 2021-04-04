@@ -151,9 +151,9 @@ contract StoryDao is Ownable{
     */
     function whitelistAddress(address _address) storyActive public payable {
         require(_address != address(0));
-        require(!whitelist[_address], "Candidate is already in whitelist.");
-        require(blacklist[_address], "Candidate is blacklisted!");
-        require(msg.value < whitelistfee, "Please send enough ethers for whitelisting fee!");
+        require(whitelist[_address] == false, "Candidate is already in whitelist.");
+        require(blacklist[_address] == false, "Candidate is blacklisted!");
+        require(whitelistfee <= msg.value, "Please send enough ethers for whitelisting fee!");
         whitelist[_address] = true;
         whitelistCount++;
         emit Whitelisted(_address, true);
@@ -255,7 +255,7 @@ contract StoryDao is Ownable{
         if (daoBalance < tokens)
             msg.sender.transfer(_amountWei);
         else 
-         token.transfer(_buyer, tokens);
+            token.transfer(_buyer, tokens);
     }
 
     /**
