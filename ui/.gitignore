@@ -1,0 +1,5 @@
+/node_modules/
+/public/build/
+/.http_certs
+
+.DS_Store

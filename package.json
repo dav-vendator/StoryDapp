@@ -5,12 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "npx hardhat test ",
-    "compile":"npx hardhat compile",
+    "compile": "npx hardhat compile",
     "genDoc": "npx hardhat docgen",
     "deployLocal": "npx hardhat run ./business_logic/scripts/deploy.js --network localhost",
     "deployRinkeby": "npx hardhat run ./business_logic/scripts/deploy.js --network rinkeby",
-    "consoleLocal":"npx hardhat console --network localhost",
-    "consoleRinkeby":"npx hardhat console --network rinkeby"
+    "consoleLocal": "npx hardhat console --network localhost",
+    "consoleRinkeby": "npx hardhat console --network rinkeby"
   },
   "repository": {
     "type": "git",
@@ -27,9 +27,7 @@
   },
   "homepage": "https://github.com/dav-vendator/StoryDapp#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^3.4.1",
-    "dotenv": "^8.2.0",
-    "truffle-wallet-provider": "^0.0.5"
+    "@openzeppelin/contracts": "^3.4.1"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
@@ -37,7 +35,7 @@
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
     "ethereum-waffle": "^3.3.0",
-    "ethers": "^5.0.32",
+    "ethers": "^5.1.0",
     "hardhat": "^2.1.1",
     "hardhat-docgen": "^1.1.0",
     "mocha": "^7.2.0",

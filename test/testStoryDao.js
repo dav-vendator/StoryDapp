@@ -50,7 +50,7 @@ describe("WhiteList and Blacklist", () => {
         dao = await storyDao.deploy(token.address);
         addresses = await ethers.getSigners();
         signer = await ethers.getSigner()
-        await token.transfer(dao.address, token.totalSupply());
+        await token.transfer(dao.address, 1000000000000);
     })
 
     it("Should have no whitelisted addresses",  async () => {
@@ -73,15 +73,42 @@ describe("WhiteList and Blacklist", () => {
 
     it("Should transfer amount greater than whitelist fee to tokens", async () => {
         let second = await addresses[1].getAddress();
-        let tokenBalance = await token.balanceOf(second);
         let transact = {
             from: second,
             to: dao.address, 
-            value: ethers.utils.parseEther("0.01")
+            value: ethers.utils.parseEther("0.02")
         };
         await addresses[1]._signer.sendTransaction(transact)
         let tokenNewBalance = await token.balanceOf(second);
-        except(tokenNewBalance > tokenBalance, "New balance must be greater than old one!");
+        /*
+        1 ether = 10^18 wei
+        1 token = 10,000 wei
+        0.01 ether = 10^16 wei
+        hence total tokens = 10^16/10^4 = 10^12
+        */
+        except(tokenNewBalance.toString()).to.eql('1000000000000',
+            "New balance must be greater than old one!");
+    })
+
+    it("Should transfer amount back when dao token balance is low", async () =>{
+        let user = await addresses[2].getAddress();
+        let transact = {
+            from: user,
+            to: dao.address, 
+            value: ethers.utils.parseEther("1")
+        };
+        let balance = await ethers.provider.getBalance(user);
+        let tokenBalanceBefore = await token.balanceOf(user);
+        await addresses[2]._signer.sendTransaction(transact);
+        let balanceAfter = await ethers.provider.getBalance(user);
+        let tokenBalanceAfter = await token.balanceOf(user);
+        let difference = (balance.sub(balanceAfter)).toString()
+        assert(
+            (tokenBalanceBefore - tokenBalanceAfter) === 0,
+            "Token Balance must not change!"
+        )
+        assert(difference === '10555488000000000',
+            "Only whitelisting fee should have deducted!")
     })
 })
 
