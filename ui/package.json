@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@dicebear/avatars": "^4.5.4",
-    "@dicebear/avatars-bottts-sprites": "^4.5.4",
+    "@dicebear/avatars-identicon-sprites": "^4.5.4",
     "bootstrap": "^5.0.0-beta3",
     "sirv-cli": "^1.0.0"
   }
