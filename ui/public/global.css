@@ -1,8 +1,32 @@
-.jumbotron{
-	background-color: #600080!important;
-	color:#FFFFFF!important;
+/*Color Theme */
+
+.greyed-caption{
+    font-family: 'Times New Roman', Times, serif;
+    font-size: small;
+    font-weight: 200;
+    color: grey;
 }
 
-/* div{
-	border:1px solid black;
-} */
+.container-fluid{
+    padding-left: 0%;
+    padding-right: 0%;
+    -webkit-margin-start: 0px;
+    -webkit-margin-end: 0px;
+}
+
+.jumbotron{
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-radius: 0%;
+    margin-bottom: 8px;
+    z-index: 20;
+}
+
+.app-title{
+    font-family:serif;
+    font-weight: 500;
+}
+
+.lead{
+    text-overflow: ellipsis;   
+}
