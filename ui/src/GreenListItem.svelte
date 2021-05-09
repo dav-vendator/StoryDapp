@@ -8,7 +8,7 @@
     export let amountType; //eth or STToken
 </script>
 
-<div class="card border border-success">
+<div class="card border border-success mx-auto">
     {#if type} <!--Data--> 
         <div class="card-header">{header}</div>
         <div class="card-body">

@@ -73,8 +73,9 @@ describe("WhiteList and Blacklist", () => {
 
     it("Should transfer amount greater than whitelist fee to tokens", async () => {
         let second = await addresses[1].getAddress();
+        let oldBalance = await token.balanceOf(second);
+        console.log(`Old Balance: ${oldBalance.toString()}`)
         let transact = {
-            from: second,
             to: dao.address, 
             value: ethers.utils.parseEther("0.02")
         };

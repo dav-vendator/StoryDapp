@@ -52,6 +52,7 @@ contract StoryDao is Ownable{
     mapping(address => bool) public whitelist;
     mapping(address => bool) public blacklist;
     mapping(bytes32 => Submission) public submissions;
+    mapping(address => uint256) public totalSubmissions;
     mapping(address => uint256) public deletions;
 
     event Whitelisted(address indexed _address, bool _status);
@@ -201,8 +202,10 @@ contract StoryDao is Ownable{
     receive () external payable {
         if (!whitelist[msg.sender]){
             whitelistAddress(msg.sender); 
-        }else{
-            //something else
+        }else if(whitelist[msg.sender]){
+            _buyTokenInternal(msg.sender, msg.value.sub(whitelistfee));
+        }else {
+            //Future Reserved
         }
     }
 
@@ -286,6 +289,7 @@ contract StoryDao is Ownable{
             msg.sender,
             true
         );
+        totalSubmissions[msg.sender] = totalSubmissions[msg.sender].add(1);
         emit SubmissionCreated(
             submissions[hashed].index,
             submissions[hashed].content,
