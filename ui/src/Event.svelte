@@ -20,30 +20,10 @@
             window.alert(`Account changed to ${account}. Please reload!`)
         })
 
-        /*
-        <div class="card border border-success mx-auto">
-    {#if type} <!--Data--> 
-        <div class="card-header">{header}</div>
-        <div class="card-body">
-            <p class="card-text">{@html data}</p>
-        </div>
-    {:else} <!--Image-->
-        <img class="card-img-top" src={data} alt={`Image from ${sender}`}>
-    {/if}
-    {#if sender !== undefined && recipient !==undefined}
-        <div class="card-footer border-success">
-            <b>From:</b> {sender}
-            <small>To</small>
-            <b>Recipient</b> {recipient}
-            <b>Amount: </b>{@html `${amount} <b>${amountType}`}
-        </div>
-    {/if}
-</div>
-
-        */
         story.on("Whitelisted", (address, status) => { 
-            let node = document.createElement("LI");                 // Create a <li> node
-            //Create card element
+            events.push({type: 0, address: address, status: status})
+            let node = document.createElement("LI");                
+            //Create card element whitelisted
             let listNode = document.createElement("div")
 
             listNode.classList.add("card")
@@ -68,10 +48,7 @@
             listNode.appendChild(divBody)
             node.appendChild(listNode); 
             node.classList.add("pt-2")
-
             document.getElementById("event_list").appendChild(node);     
-            events.push({type: 0, address: address, status: status})
-            console.log(events)
         })
     })
 </script>
