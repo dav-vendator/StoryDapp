@@ -1,14 +1,17 @@
 <!--
-Timeline component is where live updates are posted
-everytime a new event occurs it gets featured in here
-with proper color coding:
-1. Additions and Proposal Acceptances = Green outlined card
-2. Deletion = Red Outlined card
-3. Proposal added = Yellow outlined card
-4. Blacklisted = Black outlined card
+Timeline component renders submissions added.
+Green card are used to indicate new submission
+while border (dashed) is used to indicate chapter end
 -->
 <script>
-    import GreenListItem from "./GreenListItem.svelte"
+    import {ethers} from "ethers";
+    import {onMount} from "svelte";
+    import {STToken, StoryDAO} from "./abis.js";
+    import {tokenAddress, storyAddress} from  "./contracts.js";
+    import GreenListItem from "./GreenListItem.svelte";
+
+    let submission = [];
+    
     let items = [1,2,3,4,5,7,8]
 </script>
 <!-- 
