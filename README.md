@@ -20,6 +20,13 @@ De-centralised collaborative story writing application. Made by following "Build
 8. Withdraw
 9. Owner Withdraw(owner only)
 
+## Commands:
+1. **npm run deployLocal:** Deploy contract on local blockchain.
+2. **npm run deployNetwork:** Deploy contract on Test net (require API key).
+3. **npm run consoleLocal:** Start javascript console on local blockchain.
+4. **npm run test**: Run all tests.
+
+
 ## Language and Libraries:
 
 Solidity along with OpenZeppelin Libraries
