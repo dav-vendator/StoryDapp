@@ -39,6 +39,17 @@ while border (dashed) is used to indicate chapter end
         amount: "0.67", amountType: "STT"}
     ]
 </script>
+
+<style>
+  .line {
+    margin:5px 0;
+    height:2px;
+    background:
+        repeating-linear-gradient(to right,black 0,black 5px,transparent 5px,transparent 7px)
+        /*5px red then 2px transparent -> repeat this!*/
+  }
+
+</style>
 <!-- 
  -->.
 <div>
@@ -53,6 +64,9 @@ while border (dashed) is used to indicate chapter end
                 type={item.image} data={item.data}
                 recipient={item.reciver} sender={item.sender}
                 amount={item.amount} amountType={item.amountType}/>
+                {#if item.image}
+                    <div class="line"></div>
+                {/if}
             </li>
         {/each}
     </ul>

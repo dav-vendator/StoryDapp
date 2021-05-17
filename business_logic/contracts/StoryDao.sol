@@ -29,7 +29,7 @@ contract StoryDao is Ownable{
     //Duration for chapter in days
     uint16 public chapterDuration = 21;
     //Max entries a chapter can have
-    uint16 public  maxEntriesPerChapter = 1000;
+    uint16 public maxEntriesPerChapter = 1000;
     uint16 public submissionCount = 0;
     uint256 public withdrawDeadline = 5 days; 
 
@@ -263,18 +263,26 @@ contract StoryDao is Ownable{
 
     /**
     @dev calculate submisison fee required for current submission. It increases as number of 
-    submission increase.
+    submission increase. This one is internal.
     @return submissionFee (uint256)
     */
     function _calculateSubmissionFee() view internal returns (uint256){
         return submissionCount * submissionZeroFee;
     }
 
+    /**
+    @dev calculate submisison fee required for current submission. It increases as number of 
+    submission increase.
+    @return submissionFee (uint256)
+    */
+    function getSubmissionFee() public storyActive view returns (uint256) {
+        return _calculateSubmissionFee();
+    }
+
     ///TODO: Break this function into smaller chunks
-    function createSubmission(bytes memory _content, bool _image) storyActive memberOnly external payable {
-        require(token.balanceOf(msg.sender) >= 10 ** token.decimals());
+    function createSubmission(bytes memory _content, bool _image) storyActive memberOnly tokenHolderOnly external payable {
         uint256 fee = _calculateSubmissionFee();
-        require(msg.value > fee, "Insufficient fee!");
+        require(msg.value >= fee, "Insufficient fee!");
         if (_image){
             require(imageGap >= minImageGap, "Image can only be submitted after every 50 texts");
             imageGap = 0; 
@@ -480,7 +488,7 @@ contract StoryDao is Ownable{
     }
 
     modifier tokenHolderOnly() {
-        require(token.balanceOf(msg.sender) >= 10**token.decimals(),
+        require(token.balanceOf(msg.sender) >= 0,
         "Must have sufficient tokens");
         _;
     }
@@ -490,5 +498,4 @@ contract StoryDao is Ownable{
         require(!blacklist[msg.sender], "Must not be blacklisted");
         _;
     }
-
 }

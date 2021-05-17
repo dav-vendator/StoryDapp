@@ -2,7 +2,6 @@
 	import Account from "./Account.svelte";
 	import Timeline from "./Timeline.svelte";
 	import Event from "./Event.svelte";
-	import StorySubmission from "./StorySubmission.svelte";
 	let isAvailable = (window.ethereum !== undefined);
 </script>
 
