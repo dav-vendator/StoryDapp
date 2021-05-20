@@ -179,25 +179,63 @@ describe("Story Related", () => {
     })
 
     it("Should not allow image submission", async ()=>{
-        let user = await addresses[1].getAddress();
-        let submissionFee = await dao.getSubmissionFee()
+        let submissionFee = await dao.getSubmissionFee();
         let transact = {
             to: dao.address, 
-            value: ethers.utils.parseEther("20")
+            value: ethers.utils.parseEther("0.02")
         };
-        //To get more coins
-        addresses[1]._signer.sendTransaction(transact)
-        token.balanceOf(user).then(v => {
-            if (v.gt(submissionFee))
-                console.log("user balance is greater.")
-            else 
-                console.log("submission fee is greater.")
-        })
+        await addresses[1]._signer.sendTransaction(transact)
         let imagePath = ethers.utils.formatBytes32String("./ui/public/blue_flower.jpeg");
         await except(
-            dao.connect(addresses[1]).createSubmission(imagePath, false)
-        , "Submission event not fired!").to.eventually.emit(dao, "SubmissionCreated")
-        .withArgs(0,  imagePath, true, user); 
+            dao.connect(addresses[1]).createSubmission(imagePath, true, {value: submissionFee})
+        ).to.revertedWith("Image can only be submitted after every 50 texts");
+    })
+
+    it("Should allow image submission after 50 submissions", async () =>{
+        let submissionFee;
+        let transact = {
+            to: dao.address,
+            value: 0
+        };
+        //At least three image submissions
+        for (let i=1; i <= 50; i++){
+            submissionFee = await dao.getSubmissionFee();
+            transact["value"] = ethers.utils.parseEther("0.01").add(submissionFee)
+            await addresses[i % 20]._signer.sendTransaction(transact)
+
+            let address = await addresses[i%20].getAddress();
+            if (i % 50 == 0){
+                await except(
+                    dao.connect(addresses[i%20]).createSubmission(
+                        ethers.utils.formatBytes32String(`Image Submission: ${i+2}`), 
+                        true,
+                        {value: submissionFee}
+                    )
+                , "Submission event not fired!"
+                ).to.eventually.emit(dao, "SubmissionCreated")
+                .withArgs(i,  ethers.utils.formatBytes32String(`Image Submission: ${i+2}`), true, address); 
+            }else{
+                await except(
+                    dao.connect(addresses[i%20]).createSubmission(
+                        ethers.utils.formatBytes32String(`Submission: ${i+2}`), 
+                        false,
+                        {value: submissionFee}
+                    )
+                , "Submission event not fired!"
+                ).to.eventually.emit(dao, "SubmissionCreated")
+                .withArgs(i,   ethers.utils.formatBytes32String(`Submission: ${i+2}`), false, address); 
+            }
+
+        }
+    })
+
+    it("Should have an image inserted at last index", async () => {
+        let submissionHashes = await dao.getAllSubmissionHashes();
+        let lastSubmission = await dao.getSubmission(submissionHashes[submissionHashes.length-1]);
+        assert(
+            lastSubmission["image"] === true,
+            "Should have image as last entry"
+        )
     })
 })
 

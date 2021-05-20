@@ -69,6 +69,8 @@ contract StoryDao is Ownable{
     event ProposalExecuted(uint256 _id);
     event Voted(address _voter, bool _vote, uint256 _power, string reason);
 
+    event logUint(uint256 value);
+
     event StoryEnded();
     /**
     @dev Constructor for StoryDao
@@ -249,10 +251,10 @@ contract StoryDao is Ownable{
     @param _amountWei (uint256)
     */
     function _buyTokenInternal(address _buyer, uint256 _amountWei) internal {
-        require(_buyer != address(0));
-        require(_amountWei > 0);
-        require(whitelist[_buyer]);
-        require(!blacklist[_buyer]);
+        require(_buyer != address(0), "Address cannot be null.");
+        require(_amountWei > 0, "Amount must be greater than zero.");
+        require(whitelist[_buyer], "buyer must be whitelisted.");
+        require(!blacklist[_buyer], "buyer should not be blacklisted.");
         uint256 tokens = _amountWei/weiPerToken;
         uint256 daoBalance = daoTokenBalance();
         if (daoBalance < tokens)
@@ -282,6 +284,7 @@ contract StoryDao is Ownable{
     ///TODO: Break this function into smaller chunks
     function createSubmission(bytes memory _content, bool _image) storyActive memberOnly tokenHolderOnly external payable {
         uint256 fee = _calculateSubmissionFee();
+        emit logUint(msg.value);
         require(msg.value >= fee, "Insufficient fee!");
         if (_image){
             require(imageGap >= minImageGap, "Image can only be submitted after every 50 texts");
