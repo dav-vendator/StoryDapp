@@ -15,16 +15,7 @@
     const story = new ethers.Contract(storyAddress,
     StoryDAO, provider);
 
-    let events = [
-        {type:1, address: '0x43618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f', status: true},
-        {type:3, id: 4, submitter: '0xfg3f18e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f', typeFlag: 2,
-        description: 'Delete Submission at index 3'},
-        {type: 2, address: '0x45618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f', isImage: false, index: 2},
-        {type: 2, address: '0x65618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f', isImage: true, index: 2},
-        {type:3, id: 3, submitter: '0xfg3618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f', typeFlag: 2,
-        description: 'Delete Submission at index 2'},
-        {type:0, address:'0x89618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f', status: true},
-    ];
+    let events = []
 
     onMount(async() => {
         await ethereum.on('accountsChanged', function(account) {
@@ -92,6 +83,7 @@
         })
 
         story.on("SubmissionCreated", (index, isImage, submitter) => {
+            console.log("Submission!!")
             events.push({type: 2, address: submitter, isImage: isImage, index: index})
             let node = document.createElement("LI");                
             //Create card element submission created

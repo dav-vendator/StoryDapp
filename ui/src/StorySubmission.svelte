@@ -16,15 +16,15 @@
 
     //  function createSubmission(bytes memory _content, bool _image)
     let submitStory = async () =>{
-        // provider.getGasPrice().then(result => {
-        //     console.log(result.toString())
-        // })
-        // let textArea = document.getElementById("submission_text").value
-        // let hexString = ethers.utils.formatBytes32String(textArea)
-        // story.createSubmission(hexString,false, {value:1}).then(
-        //     (result) => {console.log(result)}
-        // ).catch(error => {console.log(error)})
-        // console.log(result)
+        let textArea = document.getElementById("submission_text").value;
+        let hexString = ethers.utils.formatBytes32String(textArea);
+        let amount = await story.getSubmissionFee();
+        story.createSubmission(hexString,false, {value: amount}).then(
+            () => {
+                document.getElementById("submission_text").value = ""
+                window.alert("Submission Success!")
+            }
+        ).catch(error => {console.log(error)})
     }
 </script>
 

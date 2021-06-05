@@ -62,7 +62,7 @@ contract StoryDao is Ownable{
     event DaofeePercentChanged(uint16 _newpercent);
     event TokenAddressChanged(address indexed _tokenAddress);
 
-    event SubmissionCreated(uint256 _index, bytes _content, bool _image, address _submitter);
+    event SubmissionCreated(uint256 _index, bytes _content, bool _image, address _submitter, uint256 _amount);
     event SubmissionDeleted(uint256 _index, bytes _content, bool _image, address _submitter);
 
     event ProposalAdded(uint256 _id, uint8 _typeFlag, bytes32 _hash, string _description, address indexed _submitter);
@@ -292,6 +292,7 @@ contract StoryDao is Ownable{
         } else {
             imageGap += 1;
         }
+        
         bytes32 hashed = keccak256(abi.encode(_content, block.number));
         require(!submissions[hashed].exist, "Submission already exist in the block");
         submissionIndex.push(hashed);
@@ -301,15 +302,16 @@ contract StoryDao is Ownable{
             true
         );
         totalSubmissions[msg.sender] = totalSubmissions[msg.sender].add(1);
+        submissionCount += 1;
+        //--Owner's cut
+        ownerBalance += fee.div(daofee);
         emit SubmissionCreated(
             submissions[hashed].index,
             submissions[hashed].content,
             submissions[hashed].isImage,
-            submissions[hashed].submitter
+            submissions[hashed].submitter,
+            fee
         );
-        submissionCount += 1;
-        //--Owner's cut
-        ownerBalance += fee.div(daofee);
     }
 
     /**
@@ -348,10 +350,11 @@ contract StoryDao is Ownable{
     @return submitter (address)
     @notice Assumes: Submission already exist.
     */
-    function getSubmission(bytes32  _hash) public view returns (bytes memory content, bool image, address submitter){
+    function getSubmission(bytes32  _hash) public view returns (bytes memory content, bool image, address submitter, uint256 index){
         return (submissions[_hash].content, 
             submissions[_hash].isImage, 
-            submissions[_hash].submitter);
+            submissions[_hash].submitter,
+            submissions[_hash].index);
     }
 
     /**

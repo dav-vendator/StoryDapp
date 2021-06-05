@@ -1,5 +1,5 @@
-const tokenAddress = "0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f";
-const storyAddress = "0x4A679253410272dd5232B3Ff7cF5dbB88f295319";
+const tokenAddress = "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6";
+const storyAddress = "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318";
 export {
     tokenAddress,
     storyAddress

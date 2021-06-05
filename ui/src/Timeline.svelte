@@ -16,28 +16,59 @@ while border (dashed) is used to indicate chapter end
     STToken, provider);
     const story = new ethers.Contract(storyAddress,
     StoryDAO, provider);
-    let submission = [];
-    onMount(async () => {
-        
+    let submissionZeroFee;
+    story.submissionZeroFee().then(result => {
+        submissionZeroFee = result
     })
-    let items = [
-        {image: false, title: "Tortoise And Hare", 
-        data: "Once there was a hare. He was very proud of his speed. He had a tortoise friend...",
-        reciver: storyAddress, sender: "0x2343425nffgfgdfhdfdh", 
-        amount: "0.02", amountType: "STT"},
-        {image: true, title: "Blue Flower", 
-        data: "./ui/public/assets/blue_flower.jpeg",
-        reciver: storyAddress, sender: "0x2343425nffgfgdfhdfdh", 
-        amount: "0.02", amountType: "STT"},
-        {image: false, title: "A Quick Brown Fox", 
-        data: "A Quick Brown Fox Jumped over a lazy Goat",
-        reciver: storyAddress, sender: "0x2343425nffgfgdfhdfdh", 
-        amount: "0.02", amountType: "STT"},
-        {image: false, title: "A Thirsty Crow", 
-        data: "Once there was a crow. He was very thirsty.",
-        reciver: storyAddress, sender: "0xfdfsdfsdgssddg", 
-        amount: "0.67", amountType: "STT"}
-    ]
+    let submissions = [];
+    /*
+     event SubmissionCreated(uint256 _index, bytes _content, bool _image, address _submitter);
+     event SubmissionDeleted(uint256 _index, bytes _content, bool _image, address _submitter);
+
+    */
+   let fromSubmission =  (submission) =>{
+      let message = ethers.utils.parseBytes32String(submission["content"])
+      console.log(submission["index"])
+       return {
+            image: submission["image"],
+            title: message.toUpperCase().split(' ').slice(0,2).join(" "),
+            data: message,
+            reciver: storyAddress,
+            sender: submission["submitter"],
+            amount: parseInt((submissionZeroFee.mul(submission["index"])).toString()).toExponential(),
+            amountType: 'STT'
+       }
+   }
+    let loadAllSubmissions = async () => {
+        submissions.splice(0, submissions.length)
+        let subHashes = await story.getAllSubmissionHashes();
+        console.log(`Length: ${subHashes.length}`)
+        for (let hash of subHashes){
+            story.getSubmission(hash).then(submission => {
+                submissions = [...submissions, fromSubmission(submission)]
+            })
+        }
+
+    }
+
+    onMount(async () => {
+        loadAllSubmissions();
+        story.on("SubmissionCreated", async function (index, content, image, submitter, value) {
+           console.log(`${index}==${ethers.utils.parseBytes32String(content)}==Image:${image}==${submitter}`)
+           console.log("Received")
+           console.log(value)
+           let message = ethers.utils.parseBytes32String(content)
+           submissions = [...submissions, {
+               image: image,
+               title: message.toUpperCase().split(' ').slice(0,2).join(" "),
+               data: message,
+               reciver: storyAddress,
+               sender: submitter,
+               amount: value,
+               amountType: 'STT'
+           }]
+        })
+    })
 </script>
 
 <style>
@@ -58,7 +89,7 @@ while border (dashed) is used to indicate chapter end
         <li>
             <StorySubmission/>
         </li>
-        {#each items as item}
+        {#each submissions as item}
             <li class="pt-2">
                 <GreenListItem header={item.title}
                 type={item.image} data={item.data}
