@@ -4,6 +4,13 @@ require('hardhat-docgen')
 const {alchemyApiKey, mnemonicPhrase} = require("./.secret.json")
 module.exports = {
   networks: {
+    hardhat: {
+      chainId: 1337
+    },
+    localhost: {
+      url: "http://localhost:8545",
+      chainId: 1337
+    },
   	rinkeby:{
   		url: `https://eth-rinkeby.alchemyapi.io/v2/${alchemyApiKey}`,
   		accounts: {mnemonic: mnemonicPhrase} 

@@ -1,14 +1,12 @@
 <script>
     import {ethers} from "ethers";
-    import {onMount} from "svelte";
     import {STToken, StoryDAO} from "./abis.js";
     //These are fixed for now
     import {tokenAddress, storyAddress} from "./contracts.js";
     //TODO: Change this to Rinkeby
     let provider = new ethers.providers.Web3Provider(window.ethereum);
     let account = window.ethereum.request({method:'eth_requestAccounts'});
-    let _localProvider = new ethers.providers.JsonRpcProvider();
-    let signer =  _localProvider.getSigner(0);
+    let signer =  provider.getSigner();
     const token = new ethers.Contract(tokenAddress,
     STToken, signer);
     const story = new ethers.Contract(storyAddress,
@@ -19,6 +17,7 @@
         let textArea = document.getElementById("submission_text").value;
         let hexString = ethers.utils.formatBytes32String(textArea);
         let amount = await story.getSubmissionFee();
+        console.log(`Account: ${await account}`)
         story.createSubmission(hexString,false, {value: amount}).then(
             () => {
                 document.getElementById("submission_text").value = ""

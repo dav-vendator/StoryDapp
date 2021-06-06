@@ -6,7 +6,6 @@
     import GreenListItem from "./GreenListItem.svelte";
     import RedListItem from "./RedListItem.svelte";
     import VoteListItem from "./VoteListItem.svelte";
-
     let provider = new ethers.providers.Web3Provider(window.ethereum);
     let account = window.ethereum.request({method:'eth_requestAccounts'});
     //These are fixed for now
